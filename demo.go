@@ -9,11 +9,6 @@ import (
 	"text/template"
 )
 
-// Config the plugin configuration.
-type Config struct {
-	Headers map[string]string `json:"headers,omitempty"`
-}
-
 // Demo a Demo plugin.
 type CertValidator struct {
 	next       http.Handler
@@ -38,27 +33,20 @@ func New(ctx context.Context, next http.Handler, CNames []string, name string) (
 func (a *CertValidator) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	log.Print("HANDLING")
 	rw.Write([]byte("This is an example server.\n"))
-	log.Print("CERTIFICATE CN: ", req.TLS.PeerCertificates[0].Subject.CommonName)
-	if req.TLS.PeerCertificates[0].Subject.CommonName != "localhost" {
+	currCN := req.TLS.PeerCertificates[0].Subject.CommonName
+	log.Print("CERTIFICATE CN: ", currCN)
+	log.Print("RESULT: ", contains(a.allowedCNs, currCN))
+	if !contains(a.allowedCNs, currCN) {
 		http.Error(rw, "Certificate provided is invalid.", http.StatusForbidden)
 	}
-	//for key, value := range a.headers {
-	//	tmpl, err := a.template.Parse(value)
-	//	if err != nil {
-	//		http.Error(rw, err.Error(), http.StatusInternalServerError)
-	//		return
-	//	}
-	//
-	//	writer := &bytes.Buffer{}
-	//
-	//	err = tmpl.Execute(writer, req)
-	//	if err != nil {
-	//		http.Error(rw, err.Error(), http.StatusInternalServerError)
-	//		return
-	//	}
-	//
-	//	req.Header.Set(key, writer.String())
-	//}
-
 	a.next.ServeHTTP(rw, req)
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
