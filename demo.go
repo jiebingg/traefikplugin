@@ -6,8 +6,21 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"text/template"
 )
+
+// Config the plugin configuration.
+type Config struct {
+	Headers map[string]string `json:"headers,omitempty"`
+}
+
+// CreateConfig creates the default plugin configuration.
+func CreateConfig() *Config {
+	return &Config{
+		Headers: make(map[string]string),
+	}
+}
 
 // Demo a Demo plugin.
 type CertValidator struct {
@@ -18,13 +31,13 @@ type CertValidator struct {
 }
 
 // New created a new Demo plugin.
-func New(ctx context.Context, next http.Handler, CNames []string, name string) (http.Handler, error) {
-	if len(CNames) == 0 {
+func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
+	if len(config.Headers) == 0 {
 		return nil, fmt.Errorf("headers cannot be empty")
 	}
 
 	return &CertValidator{
-		allowedCNs: CNames,
+		allowedCNs: strings.Split(config.Headers["CNames"], ","),
 		next:       next,
 		name:       name,
 	}, nil
@@ -35,6 +48,7 @@ func (a *CertValidator) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	rw.Write([]byte("This is an example server.\n"))
 	currCN := req.TLS.PeerCertificates[0].Subject.CommonName
 	log.Print("CERTIFICATE CN: ", currCN)
+	log.Print("ALLOWED CNs: ", a.allowedCNs)
 	log.Print("RESULT: ", contains(a.allowedCNs, currCN))
 	if !contains(a.allowedCNs, currCN) {
 		http.Error(rw, "Certificate provided is invalid.", http.StatusForbidden)

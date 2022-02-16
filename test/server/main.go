@@ -15,9 +15,10 @@ func main() {
 
 	ctx := context.Background()
 	next := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {})
+	cfg := traefikplugin.CreateConfig()
+	cfg.Headers["CNames"] = "localhost,test"
 
-	cNames := []string{"localhost", "test"}
-	handler, err := traefikplugin.New(ctx, next, cNames, "demo-plugin")
+	handler, err := traefikplugin.New(ctx, next, cfg, "demo-plugin")
 	if err != nil {
 		log.Fatal(err)
 	}
