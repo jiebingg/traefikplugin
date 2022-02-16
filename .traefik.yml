@@ -1,0 +1,9 @@
+displayName: Traefik Plugin
+type: middleware
+
+import: github.com/jiebingg/traefikplugin
+
+summary: 'Validate client certificate CName'
+
+testData:
+  cNames: "localhost", "test"
