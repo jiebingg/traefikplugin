@@ -43,15 +43,15 @@ func New(ctx context.Context, next http.Handler, config *Config, name string) (h
 
 func (a *CertValidator) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	currCN := req.TLS.PeerCertificates[0].Subject.CommonName
-	fmt.Print("CERTIFICATE CN: ", currCN)
-	fmt.Print("ALLOWED CNs: ", a.allowedCNs)
-	fmt.Print("RESULT: ", contains(a.allowedCNs, currCN))
+	fmt.Println("CERTIFICATE CN: ", currCN)
+	fmt.Println("ALLOWED CNs: ", a.allowedCNs)
+	fmt.Println("RESULT: ", contains(a.allowedCNs, currCN))
 	if !contains(a.allowedCNs, currCN) {
-		log.Print("Certificate provided is not authorized.")
+		log.Println("Certificate provided is not authorized.")
 		http.Error(rw, "Certificate provided is invalid.", http.StatusForbidden)
-		panic(http.ErrAbortHandler)
+	} else {
+		a.next.ServeHTTP(rw, req)
 	}
-	a.next.ServeHTTP(rw, req)
 }
 
 func contains(s []string, e string) bool {
