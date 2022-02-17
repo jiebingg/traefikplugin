@@ -42,12 +42,12 @@ func New(ctx context.Context, next http.Handler, config *Config, name string) (h
 }
 
 func (a *CertValidator) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	rw.Write([]byte("This is an example server.\n"))
 	currCN := req.TLS.PeerCertificates[0].Subject.CommonName
-	log.Print("CERTIFICATE CN: ", currCN)
-	log.Print("ALLOWED CNs: ", a.allowedCNs)
-	log.Print("RESULT: ", contains(a.allowedCNs, currCN))
+	fmt.Print("CERTIFICATE CN: ", currCN)
+	fmt.Print("ALLOWED CNs: ", a.allowedCNs)
+	fmt.Print("RESULT: ", contains(a.allowedCNs, currCN))
 	if !contains(a.allowedCNs, currCN) {
+		log.Print("Certificate provided is not authorized.")
 		http.Error(rw, "Certificate provided is invalid.", http.StatusForbidden)
 		panic(http.ErrAbortHandler)
 	}
