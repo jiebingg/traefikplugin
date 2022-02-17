@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"text/template"
 )
 
 // Config the plugin configuration.
@@ -27,7 +26,6 @@ type CertValidator struct {
 	next       http.Handler
 	allowedCNs []string
 	name       string
-	template   *template.Template
 }
 
 // New created a new Demo plugin.
@@ -44,7 +42,6 @@ func New(ctx context.Context, next http.Handler, config *Config, name string) (h
 }
 
 func (a *CertValidator) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	log.Print("HANDLING")
 	rw.Write([]byte("This is an example server.\n"))
 	currCN := req.TLS.PeerCertificates[0].Subject.CommonName
 	log.Print("CERTIFICATE CN: ", currCN)
@@ -52,6 +49,7 @@ func (a *CertValidator) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	log.Print("RESULT: ", contains(a.allowedCNs, currCN))
 	if !contains(a.allowedCNs, currCN) {
 		http.Error(rw, "Certificate provided is invalid.", http.StatusForbidden)
+		panic(http.ErrAbortHandler)
 	}
 	a.next.ServeHTTP(rw, req)
 }
